@@ -2,6 +2,7 @@ package com.api.ticketshop.Controllers;
 
 import com.api.ticketshop.DTOs.EventDTO;
 import com.api.ticketshop.Models.EventModel;
+import com.api.ticketshop.Models.TicketModel;
 import com.api.ticketshop.Services.EventService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -112,42 +114,10 @@ public class EventController {
     /**
      * Method to update a specific event by its id.
      */
-    @PatchMapping ("/{id}")
-    public ResponseEntity<Object> updateEvent (@PathVariable(value = "id") Integer id, @RequestBody @Valid EventDTO eventDTO){
 
-        Optional<EventModel> eventModelOptional = eventService.getEventByID(id);
-
-        if(eventModelOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No event found with the given id");
-        }
-
-        EventModel eventModel = eventModelOptional.get();
-
-        eventModel.setName(eventDTO.getName());
-        eventModel.setDescription(eventDTO.getDescription());
-        eventModel.setAvailable_seates(eventDTO.getAvailable_seates());
-
-        DateTimeFormatter parserDate = new DateTimeFormatterBuilder()
-                .appendPattern("dd/MM/yyyy")
-                .parseDefaulting(ChronoField.ERA, 1)
-                .toFormatter()
-                .withResolverStyle(ResolverStyle.STRICT);
-        DateTimeFormatter parserTime = DateTimeFormatter.ofPattern("HH:mm");
-
-        try{
-            LocalDate parsedDate = LocalDate.parse(eventDTO.getDate(), parserDate);
-            eventModel.setDate(parsedDate);
-
-            LocalTime parsedStartTime = LocalTime.parse(eventDTO.getStart_time(), parserTime);
-            eventModel.setStart_time(parsedStartTime);
-
-            LocalTime parsedFinishTime = LocalTime.parse(eventDTO.getFinish_time(), parserTime);
-            eventModel.setFinish_time(parsedFinishTime);
-        } catch (java.time.DateTimeException e){
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Date/time format is not acceptable");
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(eventService.createNewEvent(eventModel));
+    @PatchMapping("/{eventId}")
+    public EventModel updateEventModel(@PathVariable(value = "eventId") Integer eventId, @RequestBody Map<Object, Object> fields) {
+        return eventService.updateEventModel(eventId, fields);
     }
 
 }

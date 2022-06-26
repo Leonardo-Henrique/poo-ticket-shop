@@ -1,10 +1,7 @@
 package com.api.ticketshop.Controllers;
 
 import com.api.ticketshop.DTOs.TicketDTO;
-import com.api.ticketshop.Models.EventModel;
-import com.api.ticketshop.Models.PurchaseModel;
-import com.api.ticketshop.Models.SeatModel;
-import com.api.ticketshop.Models.TicketModel;
+import com.api.ticketshop.Models.*;
 import com.api.ticketshop.Services.EventService;
 import com.api.ticketshop.Services.PurchaseService;
 import com.api.ticketshop.Services.SeatService;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,6 +26,7 @@ public class TicketController {
 
     final PurchaseService purchaseService;
     final EventService eventService;
+
 
     public TicketController(TicketService ticketService, SeatService seatService, PurchaseService purchaseService, EventService eventService) {
         this.ticketService = ticketService;
@@ -56,6 +55,9 @@ public class TicketController {
             ticketModel.setType(ticketDTO.getType());
             ticketModel.setHash(UUID.randomUUID().toString());
             ticketModel.setStatus(ticketDTO.getStatus());
+
+            //Updating the number of available seats
+            eventModelOptional.get().setAvailable_seates(eventModelOptional.get().getAvailable_seates()-1);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.createNewTicket(ticketModel));
         }
@@ -104,9 +106,9 @@ public class TicketController {
      * Method to delete a specific ticket by its id.
      */
     @DeleteMapping("/{ticketId}")
-    public ResponseEntity<Object> deleteEventById(@PathVariable(value = "ticketId") Integer id){
+    public ResponseEntity<Object> deleteEventById(@PathVariable(value = "ticketId") Integer ticketId){
 
-        Optional<TicketModel> ticketModelOptional = ticketService.getTicketModelById(id);
+        Optional<TicketModel> ticketModelOptional = ticketService.getTicketModelById(ticketId);
 
         if(ticketModelOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No ticket found with the given id");
@@ -115,4 +117,10 @@ public class TicketController {
         ticketService.deleteEvent(ticketModelOptional.get());
         return ResponseEntity.status(HttpStatus.OK).body("Ticket deleted successfully");
     }
+
+    @PatchMapping("/{ticketId}")
+    public TicketModel updateTicketModel(@PathVariable(value = "ticketId") Integer ticketId, @RequestBody Map<Object, Object> fields) {
+        return ticketService.updateTicketModel(ticketId, fields);
+    }
+
 }
